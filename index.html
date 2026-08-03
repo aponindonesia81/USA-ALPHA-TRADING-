@@ -2,164 +2,486 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>USA Alpha Trading - Executive Admin Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>USA Alpha Trading - Executive Platform</title>
     
+    <!-- EmailJS SDK Integration -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            emailjs.init("JlHlXyGk3WyLs-FD1");
+        })();
+    </script>
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        body { background-color: #05070a; color: #ffffff; padding: 15px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; background-color: #000000; color: #ffffff; overflow-x: hidden; touch-action: manipulation; }
 
-        #adminLoginForm { display: flex; justify-content: center; align-items: center; height: 100vh; background: #05070a; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; }
-        .login-box { background: #0d1117; border: 1px solid #1f242d; padding: 30px; border-radius: 10px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .login-box h2 { font-size: 16px; color: #00e676; margin-bottom: 20px; text-align: center; text-transform: uppercase; }
-
-        header { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 15px 20px; border-radius: 8px; border: 1px solid #1f242d; margin-bottom: 20px; }
-        .logo { font-size: 16px; font-weight: 800; color: #00e676; display: flex; align-items: center; gap: 8px; }
-
-        .broadcast-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-        .broadcast-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .broadcast-header h3 { font-size: 13px; color: #00e676; text-transform: uppercase; }
-        .broadcast-row { display: flex; gap: 10px; }
-        .broadcast-row input { flex: 1; background: #000; border: 1px solid #2d3748; color: #fff; padding: 10px; border-radius: 5px; font-size: 13px; outline: none; }
-        .btn-broadcast { background: #00e676; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px; }
-
-        .section-title { font-size: 13px; color: #00e676; text-transform: uppercase; margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
-        .section-title span { font-size: 11px; color: #a0aec0; }
-
-        .users-table-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; margin-bottom: 20px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
-        th { color: #8c9bae; font-size: 10px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid #1f242d; }
-        td { padding: 10px; border-bottom: 1px solid #121620; vertical-align: middle; }
+        header { background-color: #0d1117; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f242d; position: sticky; top: 0; z-index: 1000; height: 55px; }
+        .logo { font-size: 15px; font-weight: 800; color: #00e676; display: flex; align-items: center; gap: 6px; cursor: pointer; letter-spacing: 0.5px; }
         
-        .user-email-col { font-weight: bold; color: #fff; word-break: break-all; }
-        .user-id-col { font-size: 10px; color: #a0aec0; }
+        .nav-links { display: flex; gap: 6px; align-items: center; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .nav-links::-webkit-scrollbar { display: none; }
 
-        .input-inline { background: #000; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 4px; width: 90px; font-weight: bold; font-size: 13px; text-align: center; }
-        .btn-save { background: #00a8ff; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
-        .btn-add-bal { background: #00e676; color: #000; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+        .btn-top { background: transparent; border: none; color: #ffffff; padding: 6px 8px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .btn-top:hover { background: #1a202c; color: #00e676; }
+        .btn-join-top { background: #ff9f0a; border: none; color: #000; padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-join-top:hover { background: #e08b00; }
 
-        .select-rig { background: #000; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; outline: none; }
+        .app-nav-btn { background: #1c2330; border: 1px solid #2a3447; color: #fff; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .app-nav-btn.deposit { background: #00e676; color: #000; font-weight: bold; border: none; }
+        .app-nav-btn.logout { background: #ff5252; color: #fff; font-weight: 700; border: none; padding: 6px 10px; font-size: 11px; display: flex; align-items: center; gap: 3px; border-radius: 5px; }
+        .app-nav-btn.fullscreen-nav { background: #1a202c; color: #00e676; border: 1px solid #2d3748; font-weight: 700; padding: 6px 10px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
 
-        .status-badge { font-size: 11px; font-weight: bold; }
-        .status-badge.active { color: #00e676; }
-        .status-badge.suspended { color: #ff5252; }
+        .hero-section { background: #000000; padding: 30px 20px; display: flex; justify-content: space-between; align-items: center; min-height: calc(100vh - 55px); flex-wrap: wrap; gap: 20px; }
+        .hero-text { max-width: 580px; }
+        .hero-title { font-size: 34px; font-weight: 800; line-height: 1.15; color: #ffffff; margin-bottom: 15px; }
+        .hero-title span { color: #00e676; }
+        .hero-subtitle { font-size: 14px; color: #94a3b8; margin-bottom: 24px; line-height: 1.6; }
+        
+        .demo-container { flex: 1; min-width: 100%; height: 260px; background: #0d1117; border: 1px solid #1f242d; border-radius: 12px; padding: 12px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .demo-header { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 8px; font-size: 12px; color: #00e676; font-weight: bold; }
+        #liveCanvas { width: 100%; height: 100%; }
 
-        .btn-action { border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
-        .btn-suspend { background: #ff5252; color: #fff; }
-        .btn-unsuspend { background: #00e676; color: #000; }
+        #tradingDashboardApp { display: none; flex-direction: column; height: calc(100vh - 55px); transition: all 0.3s ease; }
+        .container { display: flex; flex: 1; height: 100%; overflow: hidden; flex-direction: row; position: relative; }
+        
+        .chart-area { flex: 1; background-color: #000000; position: relative; height: 100%; width: 100%; min-height: 350px; overflow: hidden; }
+        .tradingview-widget-container { width: 100%; height: 100%; position: relative; }
+        .tradingview-widget-container__widget { width: 100%; height: 100%; }
 
-        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .sub-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; }
+        .sidebar { width: 280px; background-color: #0a0d12; padding: 12px; border-left: 1px solid #1f242d; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; z-index: 10; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .card { background-color: #121620; padding: 10px 12px; border-radius: 6px; border: 1px solid #2d3748; }
+        .card h3 { font-size: 10px; color: #a0aec0; text-transform: uppercase; font-weight: bold; }
+        .card p { font-size: 20px; font-weight: bold; color: #00e676; margin-top: 2px; }
 
-        .chat-box-admin { height: 160px; background: #000; border: 1px solid #2d3748; border-radius: 6px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
-        .chat-placeholder { color: #666; font-size: 11px; text-align: center; margin-top: 60px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; position: relative; }
+        .form-group label { font-size: 10px; color: #a0aec0; font-weight: bold; text-transform: uppercase; }
+        .form-group select, .form-group input { background: #000000; border: 1px solid #2d3748; color: #fff; padding: 10px 8px; border-radius: 5px; outline: none; font-size: 14px; font-weight: 600; width: 100%; -webkit-appearance: none; }
+        .form-group select option { background: #0d1117; color: #fff; }
+        .eye-icon { position: absolute; right: 10px; top: 26px; cursor: pointer; color: #a0aec0; font-size: 14px; }
 
-        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
-        .form-group label { font-size: 11px; color: #a0aec0; font-weight: bold; }
-        .form-group input { background: #000; border: 1px solid #2d3748; color: #fff; padding: 10px; border-radius: 5px; font-size: 13px; outline: none; }
+        .row-inputs { display: flex; gap: 6px; }
+        .row-inputs select, .row-inputs input { flex: 1; }
 
-        @media (max-width: 900px) {
-            .bottom-grid { grid-template-columns: 1fr; }
+        .trade-buttons { display: flex; gap: 10px; margin-top: 5px; }
+        .btn-trade { flex: 1; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 15px; cursor: pointer; text-align: center; }
+        .btn-call { background-color: #00e676; color: #000; }
+        .btn-put { background-color: #ff5252; color: #fff; }
+
+        .toolbar-toggle-btn { position: absolute; top: 12px; left: 12px; z-index: 100; background: rgba(13, 17, 23, 0.88); border: 1px solid #2d3748; color: #00a8ff; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .tool-caret { font-size: 13px; font-weight: 900; transition: transform 0.2s ease; }
+        .tool-caret.rotated { transform: rotate(180deg); }
+
+        #floatingTradeDock { display: none; position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(13, 17, 23, 0.95); border: 1px solid #2d3748; border-radius: 10px; padding: 10px 12px; z-index: 100; box-shadow: 0 8px 25px rgba(0,0,0,0.8); }
+        .float-dock-row { display: flex; gap: 8px; align-items: center; }
+
+        #activeTradeOverlay { display: none; position: absolute; top: 15px; right: 15px; background: rgba(13, 17, 23, 0.95); border: 1px solid #00e676; border-radius: 8px; padding: 10px 15px; z-index: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+        .trade-timer-title { font-size: 11px; color: #a0aec0; font-weight: bold; }
+        .trade-timer-clock { font-size: 18px; color: #00e676; font-weight: 800; text-align: center; margin-top: 2px; }
+
+        #tradeResultBadge { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 30px; border-radius: 12px; font-size: 20px; font-weight: 800; text-align: center; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.9); animation: popIn 0.3s ease-out; }
+        #tradeResultBadge.win { background: #00e676; color: #000; border: 2px solid #fff; }
+        #tradeResultBadge.loss { background: #ff5252; color: #fff; border: 2px solid #fff; }
+
+        @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); justify-content: center; align-items: center; z-index: 2000; padding: 12px; }
+        .modal-content { background: #0d1117; width: 100%; max-width: 480px; padding: 18px; border-radius: 10px; border: 1px solid #2d3748; display: flex; flex-direction: column; gap: 10px; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f242d; padding-bottom: 8px; }
+        .modal-header h3 { font-size: 14px; font-weight: bold; color: #ffffff; }
+        .close-btn { cursor: pointer; color: #a0aec0; font-size: 18px; font-weight: bold; padding: 4px 8px; }
+
+        .profile-header-box { display: flex; align-items: center; gap: 12px; background: #121620; padding: 10px; border-radius: 8px; }
+        .avatar { width: 44px; height: 44px; background: #00a8ff; color: #fff; font-size: 18px; font-weight: bold; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .user-meta h4 { font-size: 13px; color: #00a8ff; word-break: break-all; }
+        .user-meta p { font-size: 10px; color: #a0aec0; }
+        .badge-verified { color: #00e676; font-size: 10px; font-weight: bold; }
+
+        .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .pay-card { background: #121620; border: 1px solid #2d3748; padding: 10px 8px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s; }
+        .pay-card:hover { border-color: #00e676; background: #1a202c; }
+        .pay-info { display: flex; align-items: center; gap: 6px; }
+        .pay-title { font-size: 11px; font-weight: bold; color: #fff; }
+        .pay-min { font-size: 9px; color: #a0aec0; }
+
+        .chat-box { height: 180px; background: #000000; border: 1px solid #2d3748; border-radius: 6px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .msg { padding: 6px 10px; border-radius: 6px; font-size: 11px; max-width: 85%; word-break: break-word; }
+        .msg.user { background: #00e676; color: #000; align-self: flex-end; font-weight: 500; }
+        .msg.admin { background: #121620; color: #fff; border: 1px solid #2d3748; align-self: flex-start; }
+
+        @media (max-width: 768px) {
+            header { padding: 8px 10px; }
+            .logo { font-size: 13px; }
+            .hero-title { font-size: 26px; }
+            .hero-section { padding: 15px; }
+            .container { flex-direction: column; }
+            .chart-area { height: 50vh; min-height: 280px; }
+            .sidebar { width: 100%; height: auto; max-height: 50vh; border-left: none; border-top: 1px solid #1f242d; }
+            .payment-grid { grid-template-columns: 1fr; }
+            .btn-text { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Admin Login Overlay -->
-    <div id="adminLoginForm">
-        <div class="login-box">
-            <h2>Admin Authentication</h2>
-            <div class="form-group">
-                <label>Admin Username</label>
-                <input type="text" id="adminUser" placeholder="Enter username">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="adminPass" placeholder="Enter password">
-            </div>
-            <button class="btn-broadcast" style="width:100%; margin-top:10px; padding:12px;" onclick="verifyAdminLogin()">Login to Console</button>
+    <header>
+        <div class="logo" onclick="location.reload()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#00e676"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.09-4-4L2 15.67z"/></svg>
+            USA ALPHA TRADING
         </div>
-    </div>
-
-    <div id="adminDashboardContent" style="display:none;">
-        <header>
-            <div class="logo">🛡️ USA ALPHA TRADING - EXECUTIVE ADMIN CONSOLE</div>
-            <div><button class="btn-action btn-suspend" onclick="adminLogout()">Lock / Exit Panel</button></div>
-        </header>
-
-        <div class="broadcast-card">
-            <div class="broadcast-header">
-                <h3>📢 Global Notice Broadcast</h3>
-                <span>Send real-time alerts to all app users</span>
-            </div>
-            <div class="broadcast-row">
-                <input type="text" id="broadcastInputText" placeholder="Write global notification message..." onkeypress="if(event.key==='Enter') sendGlobalBroadcast()">
-                <button class="btn-broadcast" onclick="sendGlobalBroadcast()">Broadcast Notice</button>
-            </div>
+        
+        <div class="nav-links" id="guestNav">
+            <button class="btn-top" onclick="openAuthModal('login')">Login</button>
+            <button class="btn-join-top" onclick="openAuthModal('register')">Join Us</button>
         </div>
 
-        <div class="users-table-card">
-            <div class="section-title">
-                👥 Registered Users & Account Controls
-                <span>Manage balances, outcomes, and suspend/unsuspend status</span>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>User Details</th>
-                        <th>Name</th>
-                        <th>Account Balance Control ($)</th>
-                        <th>Outcome Rigging (Win/Loss)</th>
-                        <th>Account Status</th>
-                        <th>Action (Suspend/Unsuspend)</th>
-                    </tr>
-                </thead>
-                <tbody id="adminUserTableBody">
-                    <!-- Dynamic populated -->
-                </tbody>
-            </table>
+        <div class="nav-links" id="appNav" style="display: none;">
+            <button class="app-nav-btn fullscreen-nav" id="fullscreenBtnNav" onclick="toggleFullscreenMode()">
+                <span id="fsIcon">⛶</span> <span id="fsText">Full</span>
+            </button>
+            <button class="app-nav-btn toolbar-top-nav-btn" id="toolbarTopBtn" onclick="toggleDrawingToolbar()" style="background: #1a202c; color: #00a8ff; border: 1px solid #2d3748; font-weight: 700; padding: 6px 10px; font-size: 11px; display: flex; align-items: center; gap: 4px;">
+                <span>🖊️ Tools</span> <span class="tool-caret" id="toolCaretSymbolTop">^</span>
+            </button>
+            <button class="btn-top" onclick="showGlobalNoticeAlert()">🔔</button>
+            <button class="btn-top" onclick="openModal('inviteModal')">🎁 <span class="btn-text">Invite</span></button>
+            <button class="btn-top" onclick="openProfileModal()">👤 <span class="btn-text">Profile</span></button>
+            <button class="btn-top" onclick="openModal('supportModal')">💬 <span class="btn-text">Support</span></button>
+            <button class="app-nav-btn" onclick="openWithdrawModalDirect()">Withdraw</button>
+            <button class="app-nav-btn deposit" onclick="openModal('gatewaysModal')">Deposit</button>
+            <button class="app-nav-btn logout" onclick="userLogout()">✕ Logout</button>
+        </div>
+    </header>
+
+    <section class="hero-section" id="landingHero">
+        <div class="hero-text">
+            <h1 class="hero-title">Next-Gen US <span>Algorithmic</span> <br>Execution Platform</h1>
+            <p class="hero-subtitle">Access institutional-grade market liquidity, ultra-low latency execution, and high-precision algorithmic trading engines built specifically for US digital asset markets.</p>
+            <button class="btn-join-top" style="padding: 12px 28px; font-size: 14px;" onclick="openAuthModal('register')">Start Live Trading</button>
         </div>
 
-        <div class="bottom-grid">
-            <div class="sub-card">
-                <div class="section-title">📥 Pending Withdrawals <span>Approve or Reject cashouts</span></div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User Email</th>
-                            <th>Method & Wallet</th>
-                            <th>Amount</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminWithdrawalsTableBody">
-                        <tr><td colspan="4" style="text-align:center; color:#666; padding: 25px;">No pending withdrawal requests.</td></tr>
-                    </tbody>
-                </table>
+        <div class="demo-container">
+            <div class="demo-header">
+                <span id="demoPrice" style="color: #00e676;">$64,352.00 ▲</span>
+            </div>
+            <canvas id="liveCanvas"></canvas>
+        </div>
+    </section>
+
+    <div id="tradingDashboardApp">
+        <div class="container" id="dashboardContainer">
+            <div class="chart-area" id="chartAreaBox">
+                <button class="toolbar-toggle-btn" id="toolbarToggleBtn" onclick="toggleDrawingToolbar()">
+                    <span>🖊️ Tools</span> <span class="tool-caret" id="toolCaretSymbol">^</span>
+                </button>
+
+                <div class="tradingview-widget-container" id="tvContainer">
+                    <div class="tradingview-widget-container__widget" id="tvWidgetEmbed"></div>
+                </div>
+                
+                <div id="floatingTradeDock">
+                    <div class="float-dock-row">
+                        <div class="form-group" style="flex:1;">
+                            <label>AMOUNT ($)</label>
+                            <input type="number" id="floatInvestAmount" value="10" min="1" oninput="syncAmount(this.value)">
+                        </div>
+                        <div class="form-group" style="flex:1;">
+                            <label>TIMER</label>
+                            <select id="floatTradeTimer" onchange="syncTimer(this.value)">
+                                <option value="5">5 Sec</option>
+                                <option value="15">15 Sec</option>
+                                <option value="30">30 Sec</option>
+                                <option value="60">1 Min</option>
+                                <option value="180">3 Min</option>
+                                <option value="300">5 Min</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="trade-buttons" style="margin-top: 6px;">
+                        <button class="btn-trade btn-call" onclick="executeTrade('CALL')">CALL ▲</button>
+                        <button class="btn-trade btn-put" onclick="executeTrade('PUT')">PUT ▼</button>
+                    </div>
+                </div>
+
+                <div id="activeTradeOverlay">
+                    <div class="trade-timer-title" id="overlayPairName">BTC/USDT (CALL)</div>
+                    <div class="trade-timer-clock" id="overlayClock">00:05</div>
+                </div>
+
+                <div id="tradeResultBadge"></div>
             </div>
 
-            <div class="sub-card">
-                <div class="section-title">💬 Live Support Desk <span>Direct messaging with users</span></div>
-                <div class="form-group" style="margin-bottom: 8px;">
-                    <select class="select-rig" style="width:100%; padding:8px;" id="chatUserSelect" onchange="loadChatSession(this.value)">
-                        <option value="">-- Select Active Chat User --</option>
+            <div class="sidebar" id="sidebarPanel">
+                <div class="card">
+                    <h3>CURRENT BALANCE</h3>
+                    <p id="userBalance">$0.00</p>
+                </div>
+
+                <div class="form-group">
+                    <label>ASSET PAIR (100+ LIVE USA MARKETS)</label>
+                    <select id="marketPair" onchange="changeChartPair()">
+                        <optgroup label="--- CRYPTO ASSETS ---">
+                            <option value="BINANCE:BTCUSDT" selected>BTC / USDT (Bitcoin)</option>
+                            <option value="BINANCE:ETHUSDT">ETH / USDT (Ethereum)</option>
+                            <option value="BINANCE:SOLUSDT">SOL / USDT (Solana)</option>
+                            <option value="BINANCE:XRPUSDT">XRP / USDT (Ripple)</option>
+                            <option value="BINANCE:DOGEUSDT">DOGE / USDT (Dogecoin)</option>
+                            <option value="BINANCE:ADAUSDT">ADA / USDT (Cardano)</option>
+                            <option value="BINANCE:BNBUSDT">BNB / USDT (Binance)</option>
+                            <option value="BINANCE:AVAXUSDT">AVAX / USDT (Avalanche)</option>
+                            <option value="BINANCE:LINKUSDT">LINK / USDT (Chainlink)</option>
+                            <option value="BINANCE:DOTUSDT">DOT / USDT (Polkadot)</option>
+                        </optgroup>
+                        <optgroup label="--- US TOP STOCKS ---">
+                            <option value="NASDAQ:AAPL">Apple Inc. (AAPL)</option>
+                            <option value="NASDAQ:TSLA">Tesla Motors (TSLA)</option>
+                            <option value="NASDAQ:NVDA">NVIDIA Corp. (NVDA)</option>
+                            <option value="NASDAQ:MSFT">Microsoft Corp. (MSFT)</option>
+                            <option value="NASDAQ:AMZN">Amazon.com Inc. (AMZN)</option>
+                        </optgroup>
+                        <optgroup label="--- INDICES & COMMODITIES ---">
+                            <option value="FOREXCOM:SPXUSD">S&P 500 Index</option>
+                            <option value="FOREXCOM:NSXUSD">NASDAQ 100 Index</option>
+                            <option value="TVC:GOLD">Gold / USD (XAUUSD)</option>
+                        </optgroup>
+                        <optgroup label="--- FOREX CURRENCIES ---">
+                            <option value="FX:EURUSD">EUR / USD</option>
+                            <option value="FX:GBPUSD">GBP / USD</option>
+                            <option value="FX:USDJPY">USD / JPY</option>
+                        </optgroup>
                     </select>
                 </div>
-                <div class="chat-box-admin" id="adminChatContainer">
-                    <div class="chat-placeholder">Select a user from dropdown to start live chat</div>
+
+                <div class="row-inputs">
+                    <div class="form-group" style="flex:1;">
+                        <label>AMOUNT ($)</label>
+                        <input type="number" id="investAmount" value="10" min="1" oninput="syncAmount(this.value)">
+                    </div>
+
+                    <div class="form-group" style="flex:1;">
+                        <label>TIMER (SHORT & LONG)</label>
+                        <select id="tradeTimer" onchange="syncTimer(this.value)">
+                            <option value="5">5 Sec</option>
+                            <option value="15">15 Sec</option>
+                            <option value="30">30 Sec</option>
+                            <option value="60">1 Min</option>
+                            <option value="180">3 Min</option>
+                            <option value="300">5 Min</option>
+                            <option value="600">10 Min</option>
+                            <option value="1800">30 Min</option>
+                            <option value="3600">1 Hour</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="broadcast-row">
-                    <input type="text" id="adminReplyInput" placeholder="Type reply message..." onkeypress="if(event.key==='Enter') sendAdminReply()">
-                    <button class="btn-broadcast" onclick="sendAdminReply()">Reply</button>
+
+                <div class="trade-buttons">
+                    <button class="btn-trade btn-call" id="callBtn" onclick="executeTrade('CALL')">CALL ▲</button>
+                    <button class="btn-trade btn-put" id="putBtn" onclick="executeTrade('PUT')">PUT ▼</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="authTitle">Account Registration</h3>
+                <span class="close-btn" onclick="closeModal('authModal')">✕</span>
+            </div>
+
+            <div id="authStep1">
+                <div id="regFields">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <div class="row-inputs">
+                            <input type="text" id="regFirstName" placeholder="First name">
+                            <input type="text" id="regLastName" placeholder="Surname">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date of birth</label>
+                        <div class="row-inputs">
+                            <select id="regDay">
+                                <option value="">Day</option>
+                                <script>for(let i=1;i<=31;i++) document.write(`<option value="${i}">${i}</option>`);</script>
+                            </select>
+                            <select id="regMonth">
+                                <option value="">Month</option>
+                                <option value="Jan">Jan</option><option value="Feb">Feb</option><option value="Mar">Mar</option>
+                                <option value="Apr">Apr</option><option value="May">May</option><option value="Jun">Jun</option>
+                                <option value="Jul">Jul</option><option value="Aug">Aug</option><option value="Sep">Sep</option>
+                                <option value="Oct">Oct</option><option value="Nov">Nov</option><option value="Dec">Dec</option>
+                            </select>
+                            <select id="regYear">
+                                <option value="">Year</option>
+                                <script>for(let i=2006;i>=1950;i--) document.write(`<option value="${i}">${i}</option>`);</script>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="regGender">
+                            <option value="">Select your gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Custom">Custom</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Valid Email address</label>
+                    <input type="email" id="authEmail" placeholder="e.g. name@gmail.com" autocapitalize="none">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="authPassword" placeholder="Password" autocapitalize="none">
+                    <span class="eye-icon" onclick="togglePasswordVisibility('authPassword', this)">👁️</span>
+                </div>
+
+                <button class="btn-join-top" id="btnProceed" style="width:100%; margin-top:8px; padding:12px;" onclick="initiateAuthStep()">Proceed</button>
+            </div>
+
+            <div id="authStep2" style="display:none; text-align:center;">
+                <div style="background: rgba(0, 230, 118, 0.1); border: 1px solid #00e676; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="font-size: 15px; color: #00e676; font-weight: 800;">SECURITY VERIFICATION REQUIRED</p>
+                    <p style="font-size: 13px; color: #ffffff; font-weight: 700; margin-top: 4px;">An official OTP code has been dispatched to your email!</p>
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 12px; color: #00e676; font-weight: 800;">ENTER 6-DIGIT VERIFICATION CODE</label>
+                    <input type="text" id="userInputOtp" placeholder="------" style="text-align:center; font-size:22px; font-weight:800; letter-spacing:4px; padding: 12px;" inputmode="numeric">
+                </div>
+                <button class="btn-join-top" style="width:100%; margin-top:14px; padding: 12px; font-size: 14px; font-weight: 800;" onclick="verifyOtpAndFinish()">Verify & Activate Account</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Profile Overview</h3>
+                <span class="close-btn" onclick="closeModal('profileModal')">✕</span>
+            </div>
+            
+            <div class="profile-header-box">
+                <div class="avatar" id="profAvatar">U</div>
+                <div class="user-meta">
+                    <h4 id="profDisplayEmail">user@domain.com</h4>
+                    <p id="profIdText">ID: usr_173809</p>
+                    <span class="badge-verified">Verified Account ✓</span>
+                </div>
+            </div>
+
+            <div class="form-group"><label>FIRST NAME</label><input type="text" id="profFirstName" readonly></div>
+            <div class="form-group"><label>LAST NAME</label><input type="text" id="profLastName" readonly></div>
+            <div class="form-group"><label>EMAIL ADDRESS</label><input type="text" id="profEmailAddr" readonly></div>
+            <div class="row-inputs">
+                <div class="form-group" style="flex:1;"><label>DATE OF BIRTH</label><input type="text" id="profDob" readonly></div>
+                <div class="form-group" style="flex:1;"><label>GENDER</label><input type="text" id="profGender" readonly></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="gatewaysModal">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3>Select Payment Gateway</h3>
+                <span class="close-btn" onclick="closeModal('gatewaysModal')">✕</span>
+            </div>
+            <p style="font-size: 10px; color: #a0aec0;">Min Limit: $10.00 | Max Limit: $1,490,000.00</p>
+            
+            <div class="payment-grid">
+                <div class="pay-card" onclick="selectGateway('USDT (TRC-20)', '15')"><div class="pay-info"><span style="color:#26a69a;">₮</span><div><div class="pay-title">USDT (TRC-20)</div><div class="pay-min">Min. $15.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Binance Pay', '10')"><div class="pay-info"><span style="color:#fcd535;">P</span><div><div class="pay-title">Binance Pay</div><div class="pay-min">Min. $10.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Bitcoin (BTC)', '10')"><div class="pay-info"><span style="color:#f7931e;">₿</span><div><div class="pay-title">Bitcoin (BTC)</div><div class="pay-min">Min. $10.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Litecoin (LTC)', '10')"><div class="pay-info"><span style="color:#b8b8b8;">Ł</span><div><div class="pay-title">Litecoin (LTC)</div><div class="pay-min">Min. $10.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('USDT (ERC-20)', '10')"><div class="pay-info"><span style="color:#26a69a;">₮</span><div><div class="pay-title">USDT (ERC-20)</div><div class="pay-min">Min. $10.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Kucoin Pay', '10')"><div class="pay-info"><span style="color:#009360;">K</span><div><div class="pay-title">Kucoin Pay</div><div class="pay-min">Min. $10.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('USDT (BEP-20)', '20')"><div class="pay-info"><span style="color:#26a69a;">₮</span><div><div class="pay-title">USDT (BEP-20)</div><div class="pay-min">Min. $20.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Ethereum (ETH)', '50')"><div class="pay-info"><span style="color:#627eea;">Ξ</span><div><div class="pay-title">Ethereum (ETH)</div><div class="pay-min">Min. $50.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Bitcoin Cash', '15')"><div class="pay-info"><span style="color:#8dc351;">₿</span><div><div class="pay-title">Bitcoin Cash</div><div class="pay-min">Min. $15.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Tron (TRX)', '15')"><div class="pay-info"><span style="color:#ff0033;">T</span><div><div class="pay-title">Tron (TRX)</div><div class="pay-min">Min. $15.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('USDC (ERC-20)', '50')"><div class="pay-info"><span style="color:#2775ca;">💲</span><div><div class="pay-title">USDC (ERC-20)</div><div class="pay-min">Min. $50.00</div></div></div><span>›</span></div>
+                <div class="pay-card" onclick="selectGateway('Dash', '15')"><div class="pay-info"><span style="color:#008de4;">Đ</span><div><div class="pay-title">Dash</div><div class="pay-min">Min. $15.00</div></div></div><span>›</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="actionModal">
+        <div class="modal-content" style="text-align: center;">
+            <div class="modal-header">
+                <h3 id="selectedGwTitle">Payment Gateway</h3>
+                <span class="close-btn" onclick="closeModal('actionModal')">✕</span>
+            </div>
+
+            <div id="depositSectionBox">
+                <div style="background: #ffffff; padding: 8px; display: inline-block; border-radius: 8px; margin: 8px auto;">
+                    <img id="depositQrImg" src="" alt="QR" style="display:block;">
+                </div>
+                <div id="depositAddrBox" style="background: #000000; border: 1px solid #2d3748; padding: 8px; border-radius: 6px; word-break: break-all; font-size: 10px; color: #00e676; font-weight: bold;"></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 8px; text-align: left;">
+                <label id="amountLabelTitle">Amount ($)</label>
+                <input type="number" id="payAmount" placeholder="Enter USD Amount">
+            </div>
+
+            <div class="form-group" id="walletInputGroup" style="text-align: left;">
+                <label id="walletLabelTitle">TxHash / Wallet Address</label>
+                <input type="text" id="payAddress" placeholder="Paste Hash or Address">
+            </div>
+            
+            <div style="display:flex; gap:8px; margin-top:5px;">
+                <button class="btn-join-top" id="actionDepositBtn" style="flex:1; padding:12px;" onclick="processTransaction('Deposit')">Deposit</button>
+                <button class="btn-join-top" id="actionWithdrawBtn" style="flex:1; background:#ff5252; color:#fff; padding:12px;" onclick="processTransaction('Withdraw')">Withdraw</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="supportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Live Support Chat</h3>
+                <span class="close-btn" onclick="closeModal('supportModal')">✕</span>
+            </div>
+            <div class="chat-box" id="chatBox">
+                <div class="msg admin">Hello! Welcome to USA Alpha Trading Support. How can we assist you today?</div>
+            </div>
+            <div class="form-group" style="flex-direction: row; gap: 5px;">
+                <input type="text" id="chatInput" placeholder="Type message..." style="flex:1;" onkeypress="if(event.key==='Enter') sendChatMessage()">
+                <button class="btn-join-top" style="padding:0 14px;" onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="inviteModal">
+        <div class="modal-content" style="text-align:center;">
+            <div class="modal-header">
+                <h3>Invite Friends</h3>
+                <span class="close-btn" onclick="closeModal('inviteModal')">✕</span>
+            </div>
+            <p style="font-size: 11px; color:#a0aec0;">Share your link and earn 10% commission!</p>
+            <input type="text" readonly value="https://usa-alphatrading.com/ref/usr_173809" style="background:#000000; border:1px solid #2d3748; color:#00e676; padding:10px; border-radius:5px; text-align:center; font-weight:bold; margin:10px 0; width:100%;">
+            <button class="btn-join-top" style="padding:12px;" onclick="showCustomAlert('Invite link copied to clipboard!')">Copy Link</button>
+        </div>
+    </div>
+
+    <div class="modal" id="customAlertModal">
+        <div class="modal-content" style="max-width: 320px; text-align: center; border: 1px solid #00e676;">
+            <div style="font-size: 14px; font-weight: 800; color: #00e676; margin-bottom: 5px;">NOTIFICATION</div>
+            <div id="customAlertText" style="font-size: 12px; font-weight: 600; color: #fff; margin: 10px 0;">Message</div>
+            <button class="btn-join-top" style="width:150px; margin: 8px auto 0 auto; padding:10px;" onclick="closeModal('customAlertModal')">OK</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -176,232 +498,507 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let cachedUsers = {};
-        let cachedWithdrawals = {};
-        let cachedChats = {};
+        let currentUser = null;
+        let firebaseUserKey = null;
+        let authMode = 'login';
+        let generatedOtp = "";
+        let tradeTimerInterval = null;
+        let tvWidgetInstance = null;
+        let activeMinDeposit = 10;
+        let isFullscreen = false;
+        let isToolbarHidden = false;
 
         window.onload = function() {
-            if(localStorage.getItem('usa_admin_logged') === 'true') {
-                document.getElementById('adminLoginForm').style.display = 'none';
-                document.getElementById('adminDashboardContent').style.display = 'block';
-                initAdminFirebaseListeners();
-            }
+            startLiveDemoCanvas();
+            loadUserData();
+            initTradingViewWidget("BINANCE:BTCUSDT");
+            initGlobalNoticeListener();
         };
 
-        function verifyAdminLogin() {
-            let u = document.getElementById('adminUser').value.trim();
-            let p = document.getElementById('adminPass').value.trim();
+        function loadUserData() {
+            let savedEmail = localStorage.getItem('usa_trading_logged_email');
+            if(savedEmail) {
+                let safeKey = savedEmail.replace('.', '_');
+                db.ref('users/' + safeKey).on('value', (snapshot) => {
+                    let val = snapshot.val();
+                    if(val) {
+                        if(val.isSuspended) {
+                            alert("Your account has been suspended by administration!");
+                            userLogout();
+                            return;
+                        }
+                        currentUser = val;
+                        firebaseUserKey = safeKey;
+                        updateBalanceUI();
+                        setupAppView();
+                    }
+                });
 
-            if(u === 'Zttt0' && p === '!@#QWEAS') {
-                localStorage.setItem('usa_admin_logged', 'true');
-                document.getElementById('adminLoginForm').style.display = 'none';
-                document.getElementById('adminDashboardContent').style.display = 'block';
-                initAdminFirebaseListeners();
-            } else {
-                alert('Invalid Admin Username or Password!');
+                // Listen to Chat updates for this user
+                db.ref('chats/' + safeKey).on('value', (snapshot) => {
+                    let chatObj = snapshot.val() || {};
+                    renderUserChat(chatObj);
+                });
             }
         }
 
-        function initAdminFirebaseListeners() {
-            // Listen to Users
-            db.ref('users').on('value', (snapshot) => {
-                cachedUsers = snapshot.val() || {};
-                renderAdminData();
-            });
+        function saveUserDataToFirebase() {
+            if(currentUser && firebaseUserKey) {
+                db.ref('users/' + firebaseUserKey).set(currentUser);
+            }
+        }
 
-            // Listen to Withdrawals
-            db.ref('withdrawals').on('value', (snapshot) => {
-                cachedWithdrawals = snapshot.val() || {};
-                renderAdminData();
-            });
-
-            // Listen to Chats
-            db.ref('chats').on('value', (snapshot) => {
-                cachedChats = snapshot.val() || {};
-                let currentSelectedChat = document.getElementById('chatUserSelect').value;
-                if(currentSelectedChat) {
-                    loadChatSession(currentSelectedChat);
+        function initGlobalNoticeListener() {
+            db.ref('globalNotice').on('value', (snapshot) => {
+                let notice = snapshot.val();
+                if(notice) {
+                    localStorage.setItem('usa_trading_global_notice', notice);
                 }
             });
         }
 
-        function renderAdminData() {
-            let tbody = document.getElementById('adminUserTableBody');
-            let chatSelect = document.getElementById('chatUserSelect');
-            let currentSelectedChat = chatSelect.value;
+        function showCustomAlert(msg) {
+            document.getElementById('customAlertText').innerText = msg;
+            openModal('customAlertModal');
+        }
 
-            tbody.innerHTML = '';
-            chatSelect.innerHTML = '<option value="">-- Select Active Chat User --</option>';
-
-            let userKeys = Object.keys(cachedUsers);
-            if(userKeys.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#666; padding:20px;">No registered users found.</td></tr>`;
+        function showGlobalNoticeAlert() {
+            let notice = localStorage.getItem('usa_trading_global_notice');
+            if(notice) {
+                showCustomAlert("📢 Notice: " + notice);
             } else {
-                userKeys.forEach((key) => {
-                    let usr = cachedUsers[key];
-                    let safeKey = key.replace('.', '_'); // Firebase key safety if email used as key
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>
-                            <div class="user-email-col">${usr.email}</div>
-                            <div class="user-id-col">ID: ${usr.id || 'usr_100'}</div>
-                        </td>
-                        <td>${usr.firstName || ''} ${usr.lastName || ''}</td>
-                        <td>
-                            <div style="display:flex; gap:4px; align-items:center;">
-                                <input type="number" class="input-inline" value="${Number(usr.balance || 0).toFixed(2)}" id="bal_${safeKey}">
-                                <button class="btn-save" onclick="saveUserBalance('${key}', '${safeKey}', 'set')" title="Set exact balance">Set</button>
-                                <button class="btn-add-bal" onclick="saveUserBalance('${key}', '${safeKey}', 'add')" title="Add funds to current balance">+ Add</button>
-                            </div>
-                        </td>
-                        <td>
-                            <select class="select-rig" id="rig_${safeKey}" onchange="updateRigMode('${key}', '${safeKey}')">
-                                <option value="fair" ${usr.rigMode === 'fair' ? 'selected' : ''}>🟢 Fair (50/50)</option>
-                                <option value="win" ${usr.rigMode === 'win' ? 'selected' : ''}>🟢 Always WIN</option>
-                                <option value="loss" ${usr.rigMode === 'loss' ? 'selected' : ''}>🔴 Always LOSS</option>
-                            </select>
-                        </td>
-                        <td><span class="status-badge ${usr.isSuspended ? 'suspended' : 'active'}" id="statusText_${safeKey}">${usr.isSuspended ? 'SUSPENDED 🚫' : 'ACTIVE ✓'}</span></td>
-                        <td>
-                            <button class="btn-action ${usr.isSuspended ? 'btn-unsuspend' : 'btn-suspend'}" id="actionBtn_${safeKey}" onclick="toggleUserSuspend('${key}')">${usr.isSuspended ? 'Unsuspend ID' : 'Suspend ID'}</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-
-                    let opt = document.createElement('option');
-                    opt.value = usr.email;
-                    opt.innerText = usr.email;
-                    if(usr.email === currentSelectedChat) opt.selected = true;
-                    chatSelect.appendChild(opt);
-                });
+                showCustomAlert("No new global notifications.");
             }
+        }
 
-            // Render Withdrawals
-            let wTbody = document.getElementById('adminWithdrawalsTableBody');
-            wTbody.innerHTML = '';
-            let wKeys = Object.keys(cachedWithdrawals);
-            if(wKeys.length === 0) {
-                wTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#666; padding: 25px;">No pending withdrawal requests at the moment.</td></tr>`;
+        function togglePasswordVisibility(fieldId, iconElement) {
+            let inputField = document.getElementById(fieldId);
+            if (inputField.type === "password") {
+                inputField.type = "text";
+                iconElement.innerText = "🙈";
             } else {
-                wKeys.forEach((wKey) => {
-                    let w = cachedWithdrawals[wKey];
-                    let wTr = document.createElement('tr');
-                    wTr.innerHTML = `
-                        <td>${w.email}</td>
-                        <td>${w.method}<br><span style="font-size:10px; color:#a0aec0;">${w.address}</span></td>
-                        <td style="color:#00e676; font-weight:bold;">$${Number(w.amount).toFixed(2)}</td>
-                        <td>
-                            <button class="btn-action btn-unsuspend" onclick="approveWithdrawal('${wKey}')">Approve</button>
-                            <button class="btn-action btn-suspend" onclick="rejectWithdrawal('${wKey}')">Reject</button>
-                        </td>
-                    `;
-                    wTbody.appendChild(wTr);
+                inputField.type = "password";
+                iconElement.innerText = "👁️";
+            }
+        }
+
+        function toggleFullscreenMode() {
+            isFullscreen = !isFullscreen;
+            let sidebar = document.getElementById('sidebarPanel');
+            let fsText = document.getElementById('fsText');
+            let fsIcon = document.getElementById('fsIcon');
+            let floatDock = document.getElementById('floatingTradeDock');
+
+            if (isFullscreen) {
+                sidebar.style.display = 'none';
+                fsText.innerText = 'Small';
+                fsIcon.innerText = '🗗';
+                floatDock.style.display = 'block';
+            } else {
+                sidebar.style.display = 'flex';
+                fsText.innerText = 'Full';
+                fsIcon.innerText = '⛶';
+                floatDock.style.display = 'none';
+            }
+            setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 250);
+        }
+
+        function toggleDrawingToolbar() {
+            isToolbarHidden = !isToolbarHidden;
+            let caretEl = document.getElementById('toolCaretSymbol');
+            let caretTopEl = document.getElementById('toolCaretSymbolTop');
+            let pair = document.getElementById('marketPair').value;
+            initTradingViewWidget(pair);
+
+            if (isToolbarHidden) {
+                if (caretEl) caretEl.classList.add('rotated');
+                if (caretTopEl) caretTopEl.classList.add('rotated');
+            } else {
+                if (caretEl) caretEl.classList.remove('rotated');
+                if (caretTopEl) caretTopEl.classList.remove('rotated');
+            }
+        }
+
+        function syncAmount(val) {
+            document.getElementById('investAmount').value = val;
+            document.getElementById('floatInvestAmount').value = val;
+        }
+
+        function syncTimer(val) {
+            document.getElementById('tradeTimer').value = val;
+            document.getElementById('floatTradeTimer').value = val;
+        }
+
+        function openAuthModal(mode) {
+            authMode = mode;
+            document.getElementById('authTitle').innerText = mode === 'login' ? 'Account Login' : 'Account Registration';
+            document.getElementById('regFields').style.display = mode === 'register' ? 'block' : 'none';
+            document.getElementById('authStep1').style.display = 'block';
+            document.getElementById('authStep2').style.display = 'none';
+            openModal('authModal');
+        }
+
+        function initiateAuthStep() {
+            let email = document.getElementById('authEmail').value.trim();
+            let pass = document.getElementById('authPassword').value.trim();
+
+            if(!email || !pass) return showCustomAlert('Please enter email and password!');
+
+            let safeKey = email.replace('.', '_');
+
+            if(authMode === 'register') {
+                db.ref('users/' + safeKey).once('value', (snapshot) => {
+                    if(snapshot.exists()) {
+                        return showCustomAlert('An account with this email already exists!');
+                    }
+
+                    let btn = document.getElementById('btnProceed');
+                    btn.innerText = "Sending OTP...";
+                    btn.disabled = true;
+
+                    generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                    let templateParams = { to_email: email, otp_code: generatedOtp };
+
+                    emailjs.send('service_ripfo3s', 'template_7ccfkdp', templateParams)
+                        .then(function(response) {
+                            btn.innerText = "Proceed";
+                            btn.disabled = false;
+                            document.getElementById('authStep1').style.display = 'none';
+                            document.getElementById('authStep2').style.display = 'block';
+                        }, function(error) {
+                            btn.innerText = "Proceed";
+                            btn.disabled = false;
+                            showCustomAlert('Failed to send OTP email. Please try again.');
+                        });
+                });
+            } else {
+                db.ref('users/' + safeKey).once('value', (snapshot) => {
+                    let foundUser = snapshot.val();
+                    if(!foundUser || foundUser.password !== pass) {
+                        return showCustomAlert('Incorrect email or password!');
+                    }
+                    if(foundUser.isSuspended) {
+                        return showCustomAlert('Your account has been suspended.');
+                    }
+
+                    localStorage.setItem('usa_trading_logged_email', email);
+                    currentUser = foundUser;
+                    firebaseUserKey = safeKey;
+                    closeModal('authModal');
+                    setupAppView();
                 });
             }
-
-            if(currentSelectedChat) {
-                loadChatSession(currentSelectedChat);
-            }
         }
 
-        function saveUserBalance(firebaseKey, safeKey, mode) {
-            let inputVal = parseFloat(document.getElementById('bal_' + safeKey).value);
-            if(isNaN(inputVal)) return alert("Please enter a valid amount!");
+        function verifyOtpAndFinish() {
+            let userOtp = document.getElementById('userInputOtp').value.trim();
+            if(userOtp !== generatedOtp) return showCustomAlert('Invalid OTP code!');
 
-            let usr = cachedUsers[firebaseKey];
-            if(usr) {
-                let newBal = mode === 'add' ? (Number(usr.balance || 0) + inputVal) : inputVal;
-                db.ref('users/' + firebaseKey).update({ balance: newBal }).then(() => {
-                    alert(`Balance successfully updated for ${usr.email}!`);
-                });
-            }
-        }
+            let email = document.getElementById('authEmail').value.trim();
+            let pass = document.getElementById('authPassword').value.trim();
+            let fName = document.getElementById('regFirstName').value.trim() || 'Trader';
+            let lName = document.getElementById('regLastName').value.trim() || 'User';
+            let dob = '2000-01-01';
+            let gender = document.getElementById('regGender').value || 'Male';
+            let safeKey = email.replace('.', '_');
 
-        function updateRigMode(firebaseKey, safeKey) {
-            let rigMode = document.getElementById('rig_' + safeKey).value;
-            db.ref('users/' + firebaseKey).update({ rigMode: rigMode });
-        }
+            currentUser = {
+                email: email,
+                password: pass,
+                firstName: fName,
+                lastName: lName,
+                dob: dob,
+                gender: gender,
+                id: 'usr_' + Math.floor(100000 + Math.random() * 900000),
+                balance: 0.00,
+                rigMode: 'fair',
+                isSuspended: false
+            };
 
-        function toggleUserSuspend(firebaseKey) {
-            let usr = cachedUsers[firebaseKey];
-            if(usr) {
-                let newStatus = !usr.isSuspended;
-                db.ref('users/' + firebaseKey).update({ isSuspended: newStatus });
-            }
-        }
-
-        function sendGlobalBroadcast() {
-            let msg = document.getElementById('broadcastInputText').value.trim();
-            if(!msg) return alert("Please enter notice message.");
-            db.ref('globalNotice').set(msg).then(() => {
-                alert("Global notification successfully broadcasted to all users!");
-                document.getElementById('broadcastInputText').value = "";
+            db.ref('users/' + safeKey).set(currentUser).then(() => {
+                localStorage.setItem('usa_trading_logged_email', email);
+                firebaseUserKey = safeKey;
+                closeModal('authModal');
+                setupAppView();
+                showCustomAlert('Account verified and created successfully!');
             });
         }
 
-        function loadChatSession(email) {
-            let container = document.getElementById('adminChatContainer');
-            if(!email) {
-                container.innerHTML = '<div class="chat-placeholder">Select a user from dropdown to start live chat</div>';
-                return;
-            }
-            let safeEmailKey = email.replace('.', '_');
-            let userChatObj = cachedChats[safeEmailKey] || {};
-            let messages = Object.values(userChatObj);
+        function setupAppView() {
+            document.getElementById('landingHero').style.display = 'none';
+            document.getElementById('guestNav').style.display = 'none';
+            document.getElementById('appNav').style.display = 'flex';
+            document.getElementById('tradingDashboardApp').style.display = 'flex';
+            updateBalanceUI();
+            setTimeout(() => { changeChartPair(); }, 200);
+        }
 
-            let html = '';
+        function updateBalanceUI() {
+            if(currentUser) {
+                document.getElementById('userBalance').innerText = '$' + Number(currentUser.balance || 0).toFixed(2);
+            }
+        }
+
+        function openProfileModal() {
+            if(!currentUser) return;
+            document.getElementById('profAvatar').innerText = currentUser.firstName.charAt(0).toUpperCase();
+            document.getElementById('profDisplayEmail').innerText = currentUser.email;
+            document.getElementById('profIdText').innerText = 'ID: ' + currentUser.id;
+            document.getElementById('profFirstName').value = currentUser.firstName || '';
+            document.getElementById('profLastName').value = currentUser.lastName || '';
+            document.getElementById('profEmailAddr').value = currentUser.email || '';
+            document.getElementById('profDob').value = currentUser.dob || 'Not Specified';
+            document.getElementById('profGender').value = currentUser.gender || 'Not Specified';
+            openModal('profileModal');
+        }
+
+        function userLogout() {
+            localStorage.removeItem('usa_trading_logged_email');
+            location.reload();
+        }
+
+        function initTradingViewWidget(symbolName) {
+            document.getElementById('tvWidgetEmbed').innerHTML = "";
+            try {
+                tvWidgetInstance = new TradingView.widget({
+                    "autosize": true,
+                    "symbol": symbolName,
+                    "interval": "1",
+                    "timezone": "Etc/UTC",
+                    "theme": "dark",
+                    "style": "1",
+                    "locale": "en",
+                    "toolbar_bg": "#0d1117",
+                    "enable_publishing": false,
+                    "hide_side_toolbar": isToolbarHidden,
+                    "allow_symbol_change": true,
+                    "container_id": "tvWidgetEmbed"
+                });
+            } catch(e) {}
+        }
+
+        function changeChartPair() {
+            let pair = document.getElementById('marketPair').value;
+            initTradingViewWidget(pair);
+        }
+
+        function executeTrade(type) {
+            let amt = parseFloat(document.getElementById('investAmount').value);
+            let timeSec = parseInt(document.getElementById('tradeTimer').value);
+            let pairSelect = document.getElementById('marketPair');
+            let pairText = pairSelect.options[pairSelect.selectedIndex].text.split(' ')[0];
+
+            if (isNaN(amt) || amt <= 0) return showCustomAlert('Please enter a valid trade amount!');
+            if (amt > currentUser.balance) return showCustomAlert('Insufficient balance!');
+
+            currentUser.balance -= amt;
+            saveUserDataToFirebase();
+            updateBalanceUI();
+
+            let activeOverlay = document.getElementById('activeTradeOverlay');
+            let overlayClock = document.getElementById('overlayClock');
+            document.getElementById('overlayPairName').innerText = `${pairText} (${type})`;
+            activeOverlay.style.display = 'block';
+
+            let remainingSec = timeSec;
+            updateClockDisplay(remainingSec, overlayClock);
+
+            if(tradeTimerInterval) clearInterval(tradeTimerInterval);
+
+            tradeTimerInterval = setInterval(() => {
+                remainingSec--;
+                if(remainingSec >= 0) {
+                    updateClockDisplay(remainingSec, overlayClock);
+                } else {
+                    clearInterval(tradeTimerInterval);
+                    activeOverlay.style.display = 'none';
+                    finishTradeOutcome(amt, type);
+                }
+            }, 1000);
+        }
+
+        function updateClockDisplay(totalSec, element) {
+            let mins = Math.floor(totalSec / 60);
+            let secs = totalSec % 60;
+            element.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function finishTradeOutcome(amt, type) {
+            let win = false;
+            if(currentUser.rigMode === 'win') win = true;
+            else if(currentUser.rigMode === 'loss') win = false;
+            else win = Math.random() > 0.45;
+
+            let resultBadge = document.getElementById('tradeResultBadge');
+
+            if (win) {
+                let winAmt = amt * 1.85;
+                currentUser.balance += winAmt;
+                resultBadge.className = 'win';
+                resultBadge.innerHTML = `🎉 TRADE WIN!<br><span style="font-size:14px;">+$${winAmt.toFixed(2)} Added</span>`;
+            } else {
+                resultBadge.className = 'loss';
+                resultBadge.innerHTML = `❌ TRADE LOSS!<br><span style="font-size:14px;">-$${amt.toFixed(2)} Cut</span>`;
+            }
+
+            resultBadge.style.display = 'block';
+            saveUserDataToFirebase();
+            updateBalanceUI();
+
+            setTimeout(() => { resultBadge.style.display = 'none'; }, 3000);
+        }
+
+        function selectGateway(name, minVal) {
+            closeModal('gatewaysModal');
+            document.getElementById('selectedGwTitle').innerText = name + " Deposit";
+            activeMinDeposit = parseInt(minVal);
+            document.getElementById('amountLabelTitle').innerText = `Amount (Min. $${minVal}.00)`;
+            
+            document.getElementById('depositSectionBox').style.display = 'block';
+            document.getElementById('walletLabelTitle').innerText = "TxHash / Transaction ID";
+            document.getElementById('payAddress').placeholder = "Paste Transaction Hash";
+            document.getElementById('actionDepositBtn').style.display = 'block';
+            document.getElementById('actionWithdrawBtn').style.display = 'none';
+
+            let sampleAddr = "13WPjbkpzRFUfJpdWhkY8xLbKcJYm4LFap";
+            document.getElementById('depositAddrBox').innerText = sampleAddr;
+            document.getElementById('depositQrImg').src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${sampleAddr}`;
+
+            openModal('actionModal');
+        }
+
+        function openWithdrawModalDirect() {
+            document.getElementById('selectedGwTitle').innerText = "Withdrawal Request";
+            document.getElementById('depositSectionBox').style.display = 'none';
+            document.getElementById('amountLabelTitle').innerText = "Amount ($)";
+            document.getElementById('walletLabelTitle').innerText = "Your Personal Wallet Address / Account Number";
+            document.getElementById('payAddress').value = "";
+            document.getElementById('payAddress').placeholder = "Enter receiving address";
+            document.getElementById('actionDepositBtn').style.display = 'none';
+            document.getElementById('actionWithdrawBtn').style.display = 'block';
+            openModal('actionModal');
+        }
+
+        function processTransaction(type) {
+            let amt = parseFloat(document.getElementById('payAmount').value);
+            let addressOrHash = document.getElementById('payAddress').value.trim();
+
+            if(type === 'Deposit') {
+                if(isNaN(amt) || amt < activeMinDeposit) return showCustomAlert(`Min amount is $${activeMinDeposit}`);
+                if(!addressOrHash) return showCustomAlert('Please enter TxHash');
+                
+                currentUser.balance += amt;
+                saveUserDataToFirebase();
+                updateBalanceUI();
+                showCustomAlert('Deposit successful and added to balance!');
+            } else {
+                if(isNaN(amt) || amt <= 0) return showCustomAlert('Enter valid amount');
+                if(!addressOrHash) return showCustomAlert('Enter wallet address');
+                if(amt > currentUser.balance) return showCustomAlert('Insufficient balance');
+
+                currentUser.balance -= amt;
+                saveUserDataToFirebase();
+                updateBalanceUI();
+
+                let newWRef = db.ref('withdrawals').push();
+                newWRef.set({
+                    id: Date.now(),
+                    email: currentUser.email,
+                    method: 'Crypto Wallet',
+                    address: addressOrHash,
+                    amount: amt,
+                    status: 'Pending'
+                });
+
+                showCustomAlert('Withdrawal request submitted successfully!');
+            }
+            closeModal('actionModal');
+        }
+
+        function sendChatMessage() {
+            let inp = document.getElementById('chatInput');
+            let text = inp.value.trim();
+            if(!text || !currentUser) return;
+
+            let newMsgRef = db.ref('chats/' + firebaseUserKey).push();
+            newMsgRef.set({ sender: 'user', text: text, time: Date.now() });
+
+            inp.value = '';
+        }
+
+        function renderUserChat(chatObj) {
+            let chatBox = document.getElementById('chatBox');
+            let messages = Object.values(chatObj);
+            
+            let html = `<div class="msg admin">Hello! Welcome to USA Alpha Trading Support. How can we assist you today?</div>`;
             messages.forEach(msg => {
                 if(msg.sender === 'user') {
-                    html += `<div style="background:#121620; color:#fff; padding:6px 8px; border-radius:4px; font-size:11px; max-width:85%; border:1px solid #2d3748;">${msg.text}</div>`;
+                    html += `<div class="msg user">${msg.text}</div>`;
                 } else {
-                    html += `<div style="background:#00e676; color:#000; padding:6px 8px; border-radius:4px; font-size:11px; max-width:85%; align-self:flex-end; margin-left:auto; font-weight:500;">${msg.text}</div>`;
+                    html += `<div class="msg admin">${msg.text}</div>`;
                 }
             });
-            if(!html) html = '<div class="chat-placeholder">No messages in this chat yet.</div>';
-            container.innerHTML = html;
-            container.scrollTop = container.scrollHeight;
+            chatBox.innerHTML = html;
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
-        function sendAdminReply() {
-            let input = document.getElementById('adminReplyInput');
-            let text = input.value.trim();
-            let selectedEmail = document.getElementById('chatUserSelect').value;
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-            if(!selectedEmail) return alert("Please select a user first.");
-            if(!text) return;
+        function startLiveDemoCanvas() {
+            const canvas = document.getElementById('liveCanvas');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
 
-            let safeEmailKey = selectedEmail.replace('.', '_');
-            let newMsgRef = db.ref('chats/' + safeEmailKey).push();
-            newMsgRef.set({ sender: 'admin', text: text, time: Date.now() });
+            let price = 64352;
+            let candles = [];
+            for (let i = 0; i < 25; i++) {
+                let open = price + (Math.random() - 0.5) * 40;
+                let close = open + (Math.random() - 0.48) * 40;
+                let high = Math.max(open, close) + Math.random() * 20;
+                let low = Math.min(open, close) - Math.random() * 20;
+                candles.push({ open, close, high, low });
+                price = close;
+            }
 
-            input.value = "";
-        }
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let w = canvas.width / candles.length;
+                let minP = Math.min(...candles.map(c => c.low));
+                let maxP = Math.max(...candles.map(c => c.high));
 
-        function approveWithdrawal(wKey) {
-            db.ref('withdrawals/' + wKey).remove().then(() => {
-                alert("Withdrawal approved successfully!");
-            });
-        }
+                candles.forEach((c, i) => {
+                    let x = i * w + w / 2;
+                    let openY = canvas.height - ((c.open - minP) / (maxP - minP)) * (canvas.height - 20) - 10;
+                    let closeY = canvas.height - ((c.close - minP) / (maxP - minP)) * (canvas.height - 20) - 10;
+                    let highY = canvas.height - ((c.high - minP) / (maxP - minP)) * (canvas.height - 20) - 10;
+                    let lowY = canvas.height - ((c.low - minP) / (maxP - minP)) * (canvas.height - 20) - 10;
 
-        function rejectWithdrawal(wKey) {
-            let w = cachedWithdrawals[wKey];
-            if(w) {
-                // Find user and refund
-                let userKeys = Object.keys(cachedUsers);
-                let targetKey = userKeys.find(k => cachedUsers[k].email === w.email);
-                if(targetKey) {
-                    let currentBal = Number(cachedUsers[targetKey].balance || 0);
-                    db.ref('users/' + targetKey).update({ balance: currentBal + Number(w.amount) });
+                    let isGreen = c.close >= c.open;
+                    ctx.strokeStyle = isGreen ? '#00e676' : '#ff5252';
+                    ctx.fillStyle = isGreen ? '#00e676' : '#ff5252';
+
+                    ctx.beginPath();
+                    ctx.moveTo(x, highY);
+                    ctx.lineTo(x, lowY);
+                    ctx.stroke();
+                    ctx.fillRect(x - w / 3, Math.min(openY, closeY), (w / 3) * 2, Math.abs(closeY - openY) || 2);
+                });
+
+                let last = candles[candles.length - 1];
+                last.close += (Math.random() - 0.48) * 10;
+                last.high = Math.max(last.high, last.close);
+                last.low = Math.min(last.low, last.close);
+                
+                let demoEl = document.getElementById('demoPrice');
+                if(demoEl) {
+                    demoEl.innerText = `$${last.close.toFixed(2)} ${last.close >= last.open ? '▲' : '▼'}`;
+                    demoEl.style.color = last.close >= last.open ? '#00e676' : '#ff5252';
                 }
             }
-            db.ref('withdrawals/' + wKey).remove().then(() => {
-                alert("Withdrawal rejected and funds refunded to user.");
-            });
-        }
-
-        function adminLogout() {
-            localStorage.removeItem('usa_admin_logged');
-            location.reload();
+            setInterval(draw, 300);
         }
     </script>
 </body>
