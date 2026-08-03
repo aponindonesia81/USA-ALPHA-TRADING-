@@ -346,7 +346,7 @@
                     <span class="eye-icon" onclick="togglePasswordVisibility('authPassword', this)">👁️</span>
                 </div>
 
-                <button class="btn-join-top" id="btnProceed" style="width:100%; margin-top:8px; padding:12px;" onclick="initiateAuthStep()">Proceed</button>
+                <button class="btn-join-top" id="btnProceed" style="width:100%; margin-top:8px; padding:12px; font-weight:800;" onclick="initiateAuthStep()">Continue & Send OTP</button>
             </div>
 
             <div id="authStep2" style="display:none; text-align:center;">
@@ -518,7 +518,7 @@
         function loadUserData() {
             let savedEmail = localStorage.getItem('usa_trading_logged_email');
             if(savedEmail) {
-                let safeKey = savedEmail.replace('.', '_');
+                let safeKey = savedEmail.replace(/\./g, '_');
                 db.ref('users/' + safeKey).on('value', (snapshot) => {
                     let val = snapshot.val();
                     if(val) {
@@ -534,7 +534,6 @@
                     }
                 });
 
-                // Listen to Chat updates for this user
                 db.ref('chats/' + safeKey).on('value', (snapshot) => {
                     let chatObj = snapshot.val() || {};
                     renderUserChat(chatObj);
@@ -631,7 +630,14 @@
 
         function openAuthModal(mode) {
             authMode = mode;
-            document.getElementById('authTitle').innerText = mode === 'login' ? 'Account Login' : 'Account Registration';
+            let btnProceed = document.getElementById('btnProceed');
+            if(mode === 'login') {
+                document.getElementById('authTitle').innerText = 'Account Login';
+                btnProceed.innerText = 'Sign In Now';
+            } else {
+                document.getElementById('authTitle').innerText = 'Account Registration';
+                btnProceed.innerText = 'Continue & Send OTP';
+            }
             document.getElementById('regFields').style.display = mode === 'register' ? 'block' : 'none';
             document.getElementById('authStep1').style.display = 'block';
             document.getElementById('authStep2').style.display = 'none';
@@ -644,15 +650,26 @@
 
             if(!email || !pass) return showCustomAlert('Please enter email and password!');
 
-            let safeKey = email.replace('.', '_');
+            let safeKey = email.replace(/\./g, '_');
+            let btn = document.getElementById('btnProceed');
 
             if(authMode === 'register') {
+                let fName = document.getElementById('regFirstName').value.trim();
+                let lName = document.getElementById('regLastName').value.trim();
+                let day = document.getElementById('regDay').value;
+                let month = document.getElementById('regMonth').value;
+                let year = document.getElementById('regYear').value;
+                let gender = document.getElementById('regGender').value;
+
+                if(!fName || !lName || !day || !month || !year || !gender) {
+                    return showCustomAlert('Please fill up all registration fields!');
+                }
+
                 db.ref('users/' + safeKey).once('value', (snapshot) => {
                     if(snapshot.exists()) {
                         return showCustomAlert('An account with this email already exists!');
                     }
 
-                    let btn = document.getElementById('btnProceed');
                     btn.innerText = "Sending OTP...";
                     btn.disabled = true;
 
@@ -661,18 +678,26 @@
 
                     emailjs.send('service_ripfo3s', 'template_7ccfkdp', templateParams)
                         .then(function(response) {
-                            btn.innerText = "Proceed";
+                            btn.innerText = "Continue & Send OTP";
                             btn.disabled = false;
                             document.getElementById('authStep1').style.display = 'none';
                             document.getElementById('authStep2').style.display = 'block';
                         }, function(error) {
-                            btn.innerText = "Proceed";
+                            btn.innerText = "Continue & Send OTP";
                             btn.disabled = false;
-                            showCustomAlert('Failed to send OTP email. Please try again.');
+                            alert("DEV NOTICE: Email delivery failed. Your verification OTP is: " + generatedOtp);
+                            document.getElementById('authStep1').style.display = 'none';
+                            document.getElementById('authStep2').style.display = 'block';
                         });
                 });
             } else {
+                btn.innerText = "Signing in...";
+                btn.disabled = true;
+
                 db.ref('users/' + safeKey).once('value', (snapshot) => {
+                    btn.innerText = "Sign In Now";
+                    btn.disabled = false;
+                    
                     let foundUser = snapshot.val();
                     if(!foundUser || foundUser.password !== pass) {
                         return showCustomAlert('Incorrect email or password!');
@@ -686,6 +711,10 @@
                     firebaseUserKey = safeKey;
                     closeModal('authModal');
                     setupAppView();
+                }, (error) => {
+                    btn.innerText = "Sign In Now";
+                    btn.disabled = false;
+                    showCustomAlert('Database connection error. Try again.');
                 });
             }
         }
@@ -698,9 +727,12 @@
             let pass = document.getElementById('authPassword').value.trim();
             let fName = document.getElementById('regFirstName').value.trim() || 'Trader';
             let lName = document.getElementById('regLastName').value.trim() || 'User';
-            let dob = '2000-01-01';
+            let day = document.getElementById('regDay').value;
+            let month = document.getElementById('regMonth').value;
+            let year = document.getElementById('regYear').value;
+            let dob = `${year}-${month}-${day}`;
             let gender = document.getElementById('regGender').value || 'Male';
-            let safeKey = email.replace('.', '_');
+            let safeKey = email.replace(/\./g, '_');
 
             currentUser = {
                 email: email,
