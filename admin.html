@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>USA Alpha Trading - Executive Admin Console</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: #05070a; color: #ffffff; padding: 15px; }
+
+        #adminLoginForm { display: flex; justify-content: center; align-items: center; height: 100vh; background: #05070a; position: fixed; top: 0; left: 0; width: 100%; z-index: 9999; }
+        .login-box { background: #0d1117; border: 1px solid #1f242d; padding: 30px; border-radius: 10px; width: 100%; max-width: 380px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .login-box h2 { font-size: 16px; color: #00e676; margin-bottom: 20px; text-align: center; text-transform: uppercase; }
+
+        header { display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 15px 20px; border-radius: 8px; border: 1px solid #1f242d; margin-bottom: 20px; }
+        .logo { font-size: 16px; font-weight: 800; color: #00e676; display: flex; align-items: center; gap: 8px; }
+
+        .broadcast-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .broadcast-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .broadcast-header h3 { font-size: 13px; color: #00e676; text-transform: uppercase; }
+        .broadcast-row { display: flex; gap: 10px; }
+        .broadcast-row input { flex: 1; background: #000; border: 1px solid #2d3748; color: #fff; padding: 10px; border-radius: 5px; font-size: 13px; outline: none; }
+        .btn-broadcast { background: #00e676; color: #000; border: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px; }
+
+        .section-title { font-size: 13px; color: #00e676; text-transform: uppercase; margin-bottom: 10px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; }
+        .section-title span { font-size: 11px; color: #a0aec0; }
+
+        .users-table-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; margin-bottom: 20px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+        th { color: #8c9bae; font-size: 10px; text-transform: uppercase; padding: 8px 10px; border-bottom: 1px solid #1f242d; }
+        td { padding: 10px; border-bottom: 1px solid #121620; vertical-align: middle; }
+        
+        .user-email-col { font-weight: bold; color: #fff; word-break: break-all; }
+        .user-id-col { font-size: 10px; color: #a0aec0; }
+
+        .input-inline { background: #000; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 4px; width: 90px; font-weight: bold; font-size: 13px; text-align: center; }
+        .btn-save { background: #00a8ff; color: #fff; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; margin-right: 4px; }
+        .btn-add-bal { background: #00e676; color: #000; border: none; padding: 6px 10px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 11px; }
+
+        .select-rig { background: #000; border: 1px solid #2d3748; color: #fff; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; outline: none; }
+
+        .status-badge { font-size: 11px; font-weight: bold; }
+        .status-badge.active { color: #00e676; }
+        .status-badge.suspended { color: #ff5252; }
+
+        .btn-action { border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 11px; cursor: pointer; }
+        .btn-suspend { background: #ff5252; color: #fff; }
+        .btn-unsuspend { background: #00e676; color: #000; }
+
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .sub-card { background: #0d1117; border: 1px solid #1f242d; border-radius: 8px; padding: 15px; }
+
+        .chat-box-admin { height: 160px; background: #000; border: 1px solid #2d3748; border-radius: 6px; padding: 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+        .chat-placeholder { color: #666; font-size: 11px; text-align: center; margin-top: 60px; }
+
+        .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .form-group label { font-size: 11px; color: #a0aec0; font-weight: bold; }
+        .form-group input { background: #000; border: 1px solid #2d3748; color: #fff; padding: 10px; border-radius: 5px; font-size: 13px; outline: none; }
+
+        @media (max-width: 900px) {
+            .bottom-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Admin Login Overlay -->
+    <div id="adminLoginForm">
+        <div class="login-box">
+            <h2>Admin Authentication</h2>
+            <div class="form-group">
+                <label>Admin Username</label>
+                <input type="text" id="adminUser" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="adminPass" placeholder="Enter password">
+            </div>
+            <button class="btn-broadcast" style="width:100%; margin-top:10px; padding:12px;" onclick="verifyAdminLogin()">Login to Console</button>
+        </div>
+    </div>
+
+    <div id="adminDashboardContent" style="display:none;">
+        <header>
+            <div class="logo">🛡️ USA ALPHA TRADING - EXECUTIVE ADMIN CONSOLE</div>
+            <div><button class="btn-action btn-suspend" onclick="adminLogout()">Lock / Exit Panel</button></div>
+        </header>
+
+        <div class="broadcast-card">
+            <div class="broadcast-header">
+                <h3>📢 Global Notice Broadcast</h3>
+                <span>Send real-time alerts to all app users</span>
+            </div>
+            <div class="broadcast-row">
+                <input type="text" id="broadcastInputText" placeholder="Write global notification message..." onkeypress="if(event.key==='Enter') sendGlobalBroadcast()">
+                <button class="btn-broadcast" onclick="sendGlobalBroadcast()">Broadcast Notice</button>
+            </div>
+        </div>
+
+        <div class="users-table-card">
+            <div class="section-title">
+                👥 Registered Users & Account Controls
+                <span>Manage balances, outcomes, and suspend/unsuspend status</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>User Details</th>
+                        <th>Name</th>
+                        <th>Account Balance Control ($)</th>
+                        <th>Outcome Rigging (Win/Loss)</th>
+                        <th>Account Status</th>
+                        <th>Action (Suspend/Unsuspend)</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUserTableBody">
+                    <!-- Dynamic populated -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="sub-card">
+                <div class="section-title">📥 Pending Withdrawals <span>Approve or Reject cashouts</span></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Email</th>
+                            <th>Method & Wallet</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminWithdrawalsTableBody">
+                        <tr><td colspan="4" style="text-align:center; color:#666; padding: 25px;">No pending withdrawal requests.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sub-card">
+                <div class="section-title">💬 Live Support Desk <span>Direct messaging with users</span></div>
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <select class="select-rig" style="width:100%; padding:8px;" id="chatUserSelect" onchange="loadChatSession(this.value)">
+                        <option value="">-- Select Active Chat User --</option>
+                    </select>
+                </div>
+                <div class="chat-box-admin" id="adminChatContainer">
+                    <div class="chat-placeholder">Select a user from dropdown to start live chat</div>
+                </div>
+                <div class="broadcast-row">
+                    <input type="text" id="adminReplyInput" placeholder="Type reply message..." onkeypress="if(event.key==='Enter') sendAdminReply()">
+                    <button class="btn-broadcast" onclick="sendAdminReply()">Reply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AizaSyDY41EPABQwX9Amp5gpXSPkpgFVaBaRhFE",
+            authDomain: "live-trading-app-fcd98.firebaseapp.com",
+            databaseURL: "https://live-trading-app-fcd98-default-rtdb.firebaseio.com",
+            projectId: "live-trading-app-fcd98",
+            storageBucket: "live-trading-app-fcd98.appspot.com",
+            messagingSenderId: "264090456667",
+            appId: "1:264090456667:web:99cff6963ba258734c257e",
+            measurementId: "G-3ZTHNXE8X2"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let cachedUsers = {};
+        let cachedWithdrawals = {};
+        let cachedChats = {};
+
+        window.onload = function() {
+            if(localStorage.getItem('usa_admin_logged') === 'true') {
+                document.getElementById('adminLoginForm').style.display = 'none';
+                document.getElementById('adminDashboardContent').style.display = 'block';
+                initAdminFirebaseListeners();
+            }
+        };
+
+        function verifyAdminLogin() {
+            let u = document.getElementById('adminUser').value.trim();
+            let p = document.getElementById('adminPass').value.trim();
+
+            if(u === 'Zttt0' && p === '!@#QWEAS') {
+                localStorage.setItem('usa_admin_logged', 'true');
+                document.getElementById('adminLoginForm').style.display = 'none';
+                document.getElementById('adminDashboardContent').style.display = 'block';
+                initAdminFirebaseListeners();
+            } else {
+                alert('Invalid Admin Username or Password!');
+            }
+        }
+
+        function initAdminFirebaseListeners() {
+            // Listen to Users
+            db.ref('users').on('value', (snapshot) => {
+                cachedUsers = snapshot.val() || {};
+                renderAdminData();
+            });
+
+            // Listen to Withdrawals
+            db.ref('withdrawals').on('value', (snapshot) => {
+                cachedWithdrawals = snapshot.val() || {};
+                renderAdminData();
+            });
+
+            // Listen to Chats
+            db.ref('chats').on('value', (snapshot) => {
+                cachedChats = snapshot.val() || {};
+                let currentSelectedChat = document.getElementById('chatUserSelect').value;
+                if(currentSelectedChat) {
+                    loadChatSession(currentSelectedChat);
+                }
+            });
+        }
+
+        function renderAdminData() {
+            let tbody = document.getElementById('adminUserTableBody');
+            let chatSelect = document.getElementById('chatUserSelect');
+            let currentSelectedChat = chatSelect.value;
+
+            tbody.innerHTML = '';
+            chatSelect.innerHTML = '<option value="">-- Select Active Chat User --</option>';
+
+            let userKeys = Object.keys(cachedUsers);
+            if(userKeys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#666; padding:20px;">No registered users found.</td></tr>`;
+            } else {
+                userKeys.forEach((key) => {
+                    let usr = cachedUsers[key];
+                    let safeKey = key.replace('.', '_'); // Firebase key safety if email used as key
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>
+                            <div class="user-email-col">${usr.email}</div>
+                            <div class="user-id-col">ID: ${usr.id || 'usr_100'}</div>
+                        </td>
+                        <td>${usr.firstName || ''} ${usr.lastName || ''}</td>
+                        <td>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <input type="number" class="input-inline" value="${Number(usr.balance || 0).toFixed(2)}" id="bal_${safeKey}">
+                                <button class="btn-save" onclick="saveUserBalance('${key}', '${safeKey}', 'set')" title="Set exact balance">Set</button>
+                                <button class="btn-add-bal" onclick="saveUserBalance('${key}', '${safeKey}', 'add')" title="Add funds to current balance">+ Add</button>
+                            </div>
+                        </td>
+                        <td>
+                            <select class="select-rig" id="rig_${safeKey}" onchange="updateRigMode('${key}', '${safeKey}')">
+                                <option value="fair" ${usr.rigMode === 'fair' ? 'selected' : ''}>🟢 Fair (50/50)</option>
+                                <option value="win" ${usr.rigMode === 'win' ? 'selected' : ''}>🟢 Always WIN</option>
+                                <option value="loss" ${usr.rigMode === 'loss' ? 'selected' : ''}>🔴 Always LOSS</option>
+                            </select>
+                        </td>
+                        <td><span class="status-badge ${usr.isSuspended ? 'suspended' : 'active'}" id="statusText_${safeKey}">${usr.isSuspended ? 'SUSPENDED 🚫' : 'ACTIVE ✓'}</span></td>
+                        <td>
+                            <button class="btn-action ${usr.isSuspended ? 'btn-unsuspend' : 'btn-suspend'}" id="actionBtn_${safeKey}" onclick="toggleUserSuspend('${key}')">${usr.isSuspended ? 'Unsuspend ID' : 'Suspend ID'}</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+
+                    let opt = document.createElement('option');
+                    opt.value = usr.email;
+                    opt.innerText = usr.email;
+                    if(usr.email === currentSelectedChat) opt.selected = true;
+                    chatSelect.appendChild(opt);
+                });
+            }
+
+            // Render Withdrawals
+            let wTbody = document.getElementById('adminWithdrawalsTableBody');
+            wTbody.innerHTML = '';
+            let wKeys = Object.keys(cachedWithdrawals);
+            if(wKeys.length === 0) {
+                wTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#666; padding: 25px;">No pending withdrawal requests at the moment.</td></tr>`;
+            } else {
+                wKeys.forEach((wKey) => {
+                    let w = cachedWithdrawals[wKey];
+                    let wTr = document.createElement('tr');
+                    wTr.innerHTML = `
+                        <td>${w.email}</td>
+                        <td>${w.method}<br><span style="font-size:10px; color:#a0aec0;">${w.address}</span></td>
+                        <td style="color:#00e676; font-weight:bold;">$${Number(w.amount).toFixed(2)}</td>
+                        <td>
+                            <button class="btn-action btn-unsuspend" onclick="approveWithdrawal('${wKey}')">Approve</button>
+                            <button class="btn-action btn-suspend" onclick="rejectWithdrawal('${wKey}')">Reject</button>
+                        </td>
+                    `;
+                    wTbody.appendChild(wTr);
+                });
+            }
+
+            if(currentSelectedChat) {
+                loadChatSession(currentSelectedChat);
+            }
+        }
+
+        function saveUserBalance(firebaseKey, safeKey, mode) {
+            let inputVal = parseFloat(document.getElementById('bal_' + safeKey).value);
+            if(isNaN(inputVal)) return alert("Please enter a valid amount!");
+
+            let usr = cachedUsers[firebaseKey];
+            if(usr) {
+                let newBal = mode === 'add' ? (Number(usr.balance || 0) + inputVal) : inputVal;
+                db.ref('users/' + firebaseKey).update({ balance: newBal }).then(() => {
+                    alert(`Balance successfully updated for ${usr.email}!`);
+                });
+            }
+        }
+
+        function updateRigMode(firebaseKey, safeKey) {
+            let rigMode = document.getElementById('rig_' + safeKey).value;
+            db.ref('users/' + firebaseKey).update({ rigMode: rigMode });
+        }
+
+        function toggleUserSuspend(firebaseKey) {
+            let usr = cachedUsers[firebaseKey];
+            if(usr) {
+                let newStatus = !usr.isSuspended;
+                db.ref('users/' + firebaseKey).update({ isSuspended: newStatus });
+            }
+        }
+
+        function sendGlobalBroadcast() {
+            let msg = document.getElementById('broadcastInputText').value.trim();
+            if(!msg) return alert("Please enter notice message.");
+            db.ref('globalNotice').set(msg).then(() => {
+                alert("Global notification successfully broadcasted to all users!");
+                document.getElementById('broadcastInputText').value = "";
+            });
+        }
+
+        function loadChatSession(email) {
+            let container = document.getElementById('adminChatContainer');
+            if(!email) {
+                container.innerHTML = '<div class="chat-placeholder">Select a user from dropdown to start live chat</div>';
+                return;
+            }
+            let safeEmailKey = email.replace('.', '_');
+            let userChatObj = cachedChats[safeEmailKey] || {};
+            let messages = Object.values(userChatObj);
+
+            let html = '';
+            messages.forEach(msg => {
+                if(msg.sender === 'user') {
+                    html += `<div style="background:#121620; color:#fff; padding:6px 8px; border-radius:4px; font-size:11px; max-width:85%; border:1px solid #2d3748;">${msg.text}</div>`;
+                } else {
+                    html += `<div style="background:#00e676; color:#000; padding:6px 8px; border-radius:4px; font-size:11px; max-width:85%; align-self:flex-end; margin-left:auto; font-weight:500;">${msg.text}</div>`;
+                }
+            });
+            if(!html) html = '<div class="chat-placeholder">No messages in this chat yet.</div>';
+            container.innerHTML = html;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function sendAdminReply() {
+            let input = document.getElementById('adminReplyInput');
+            let text = input.value.trim();
+            let selectedEmail = document.getElementById('chatUserSelect').value;
+
+            if(!selectedEmail) return alert("Please select a user first.");
+            if(!text) return;
+
+            let safeEmailKey = selectedEmail.replace('.', '_');
+            let newMsgRef = db.ref('chats/' + safeEmailKey).push();
+            newMsgRef.set({ sender: 'admin', text: text, time: Date.now() });
+
+            input.value = "";
+        }
+
+        function approveWithdrawal(wKey) {
+            db.ref('withdrawals/' + wKey).remove().then(() => {
+                alert("Withdrawal approved successfully!");
+            });
+        }
+
+        function rejectWithdrawal(wKey) {
+            let w = cachedWithdrawals[wKey];
+            if(w) {
+                // Find user and refund
+                let userKeys = Object.keys(cachedUsers);
+                let targetKey = userKeys.find(k => cachedUsers[k].email === w.email);
+                if(targetKey) {
+                    let currentBal = Number(cachedUsers[targetKey].balance || 0);
+                    db.ref('users/' + targetKey).update({ balance: currentBal + Number(w.amount) });
+                }
+            }
+            db.ref('withdrawals/' + wKey).remove().then(() => {
+                alert("Withdrawal rejected and funds refunded to user.");
+            });
+        }
+
+        function adminLogout() {
+            localStorage.removeItem('usa_admin_logged');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
